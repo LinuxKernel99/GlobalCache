@@ -83,7 +83,7 @@ class GlobalCache:
         if attribute not in self.cache:
             raise AttributeDoesNotExist
 
-        return self.cache.get(attribute)
+        return self.cache[attribute]
 
     def refresh(self, attribute: str):
         if attribute not in self.cache:
