@@ -74,7 +74,7 @@ class GlobalCache:
             sleep(1)
 
     def register(self, attribute: str, provider: Callable, refresh_rate = 0):
-        if attribute is self.cache:
+        if attribute in self.cache:
             raise AttributeAlreadyExist
 
         self.__register(attribute, provider, refresh_rate)
