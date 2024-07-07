@@ -40,12 +40,16 @@ class GlobalCache:
     cache_metadata: Dict[str, CacheMetadata]
     max_thread_number: int
     register_lock: Any
+    excutor: Any
+    stop_event: Any
 
     def __init__(self, max_thread_number: int):
         self.cache = {}
         self.cache_metadata = {}
         self.max_thread_number = max_thread_number
         self.register_lock = threading.Lock()
+        self.excutor = concurrent.futures.ThreadPoolExecutor(max_workers=max_thread_number)
+        self.stop_event = threading.Event()
 
     def __register(self, attribute: str, provider: Callable, refresh_rate):
         with self.register_lock:
@@ -67,7 +71,7 @@ class GlobalCache:
             raise ProviderFailedToExecute(str(e))
 
     def __run(self):
-        while True:
+        while not self.stop_event.is_set():
             for attribute, metadata in self.cache_metadata.items():
                 if metadata.is_expired():
                     self.refresh(attribute)
@@ -105,7 +109,11 @@ class GlobalCache:
         return self.cache_metadata[attribute].last_error
 
     def run(self):
-        excutor = concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread_number)
         for _ in range(self.max_thread_number):
-            excutor.submit(self.__run)
+            self.excutor.submit(self.__run)
+
+    def stop(self):
+        self.stop_event.set()
+        self.excutor.shutdown(wait=True)
+        self.stop_event.clear()
 
