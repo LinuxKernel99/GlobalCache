@@ -2,7 +2,8 @@ import arrow
 import threading
 from time import sleep
 import concurrent.futures
-from typing import Dict, Any, Callable
+from typing import Dict, Any, Callable, Tuple
+
 from pydantic import BaseModel as BM
 
 
@@ -17,6 +18,7 @@ class AttributeAlreadyExist(Exception):
 
 class CacheMetadata(BM):
     provider: Callable
+    args: Tuple = tuple()
     refresh_rate: int
     lock: Any
     last_refresh: float | None = None
@@ -53,12 +55,13 @@ class GlobalCache:
         self.excutor = concurrent.futures.ThreadPoolExecutor(max_workers=max_thread_number)
         self.stop_event = threading.Event()
 
-    def __register(self, attribute: str, provider: Callable, refresh_rate):
+    def __register(self, attribute: str, provider: Callable, refresh_rate: int, args: Tuple):
         with self.register_lock:
             metadata = CacheMetadata(
                     provider=provider,
                     refresh_rate=refresh_rate,
-                    lock = threading.Lock()
+                    lock = threading.Lock(),
+                    args = args
                     )
 
             self.cache[attribute] = None
@@ -66,7 +69,8 @@ class GlobalCache:
 
     def __refresh(self, attribute):
         try:
-            value = self.cache_metadata[attribute].provider()
+            args = self.cache_metadata[attribute].args
+            value = self.cache_metadata[attribute].provider(*args)
             self.cache[attribute] = value
             self.cache_metadata[attribute].update_last_refresh()
         except Exception as e:
@@ -79,11 +83,11 @@ class GlobalCache:
                     self.refresh(attribute)
             sleep(self.thread_sleep_seconds)
 
-    def register(self, attribute: str, provider: Callable, refresh_rate = 0):
+    def register(self, attribute: str, provider: Callable, refresh_rate: int = 0, args: Tuple = tuple()):
         if attribute in self.cache:
             raise AttributeAlreadyExist
 
-        self.__register(attribute, provider, refresh_rate)
+        self.__register(attribute, provider, refresh_rate, args)
 
     def get(self, attribute: str):
         if attribute not in self.cache:
@@ -95,6 +99,8 @@ class GlobalCache:
         if attribute not in self.cache:
             raise AttributeDoesNotExist
 
+        # in case the function is under processing by other thread -> skip
+        # otherwise -> lock
         acquired = self.cache_metadata[attribute].lock.acquire(blocking=False)
         if not acquired:
             return
