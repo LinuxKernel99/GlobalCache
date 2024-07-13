@@ -19,7 +19,7 @@ class CacheMetadata(BM):
     provider: Callable
     refresh_rate: int
     lock: Any
-    last_refresh: int | None = None
+    last_refresh: float | None = None
     last_error: Any = None
 
     def is_expired(self):
@@ -29,22 +29,22 @@ class CacheMetadata(BM):
         if self.refresh_rate is None:
             return False;
 
-        seconds_passed = (arrow.get() - self.last_refresh).total_seconds()
+        seconds_passed = (arrow.get().timestamp() - self.last_refresh) 
         return seconds_passed > self.refresh_rate
 
     def update_last_refresh(self):
-        self.last_refresh = arrow.get()
+        self.last_refresh = arrow.get().timestamp()
 
 class GlobalCache:
     cache: Dict[str, Any]
     cache_metadata: Dict[str, CacheMetadata]
     max_thread_number: int
-    thread_sleep_seconds: int
+    thread_sleep_seconds: float
     register_lock: Any
     excutor: Any
     stop_event: Any
 
-    def __init__(self, max_thread_number: int, thread_sleep_seconds: int = 1):
+    def __init__(self, max_thread_number: int, thread_sleep_seconds: float = 1):
         self.cache = {}
         self.cache_metadata = {}
         self.max_thread_number = max_thread_number

@@ -1,7 +1,6 @@
 import arrow
 import pytest
 from time import sleep
-from random import randint
 from global_cache import GlobalCache
 
 @pytest.fixture
