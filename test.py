@@ -23,9 +23,9 @@ def get_data_slow():
 
 def test_a(cache):
     value = 99
-    cache.register('first_key', get, 1, (value, ))
-    cache.register('data', get_data, 1)
-    cache.register('slow_data', get_data_slow, 1)
+    cache.register('first_key', get, (value, ), 1)
+    cache.register('data', get_data, refresh_rate = 1)
+    cache.register('slow_data', get_data_slow, refresh_rate = 1)
     assert cache.get('first_key') is None
     assert cache.get('data') is None
     assert cache.get('slow_data') is None
@@ -36,7 +36,7 @@ def test_a(cache):
 
 def test_b(cache):
     value = 100
-    cache.register('something', get, 5, (value, ))
+    cache.register('something', get, (value, ), 5)
     assert cache.get('something') is None 
     sleep(5)
     assert cache.get('something') == value

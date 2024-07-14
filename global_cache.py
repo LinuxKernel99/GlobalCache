@@ -55,7 +55,7 @@ class GlobalCache:
         self.excutor = concurrent.futures.ThreadPoolExecutor(max_workers=max_thread_number)
         self.stop_event = threading.Event()
 
-    def __register(self, attribute: str, provider: Callable, refresh_rate: int, args: Tuple):
+    def __register(self, attribute: str, provider: Callable, args: Tuple, refresh_rate: int):
         with self.register_lock:
             metadata = CacheMetadata(
                     provider=provider,
@@ -83,11 +83,11 @@ class GlobalCache:
                     self.refresh(attribute)
             sleep(self.thread_sleep_seconds)
 
-    def register(self, attribute: str, provider: Callable, refresh_rate: int = 0, args: Tuple = tuple()):
+    def register(self, attribute: str, provider: Callable, args: Tuple = tuple(), refresh_rate: int = 0):
         if attribute in self.cache:
             raise AttributeAlreadyExist
 
-        self.__register(attribute, provider, refresh_rate, args)
+        self.__register(attribute, provider, args, refresh_rate)
 
     def get(self, attribute: str):
         if attribute not in self.cache:
