@@ -31,11 +31,11 @@ class CacheMetadata(BM):
         if self.refresh_rate is None:
             return False;
 
-        seconds_passed = (arrow.get().timestamp() - self.last_refresh) 
+        seconds_passed = (arrow.get().float_timestamp - self.last_refresh) 
         return seconds_passed > self.refresh_rate
 
     def update_last_refresh(self):
-        self.last_refresh = arrow.get().timestamp()
+        self.last_refresh = arrow.get().float_timestamp
 
 class GlobalCache:
     cache: Dict[str, Any]
