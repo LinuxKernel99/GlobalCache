@@ -85,19 +85,19 @@ class GlobalCache:
 
     def register(self, attribute: str, provider: Callable, args: Tuple = tuple(), refresh_rate: int = 0):
         if attribute in self.cache:
-            raise AttributeAlreadyExist
+            raise AttributeAlreadyExist()
 
         self.__register(attribute, provider, args, refresh_rate)
 
     def get(self, attribute: str):
         if attribute not in self.cache:
-            raise AttributeDoesNotExist
+            raise AttributeDoesNotExist()
 
         return self.cache[attribute]
 
     def refresh(self, attribute: str):
         if attribute not in self.cache:
-            raise AttributeDoesNotExist
+            raise AttributeDoesNotExist()
 
         # in case the function is under processing by other thread -> skip
         # otherwise -> lock
